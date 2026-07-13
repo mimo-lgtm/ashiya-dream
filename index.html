@@ -214,49 +214,45 @@ async function blendAI(bigKey) {
 
 /* ===================== SPREADSHEET INTEGRATION ===================== */
 async function appendToSpreadsheet(idea) {
-  // 注意: 書き込みにはGoogle Apps Script Web App または OAuth が必要。
-  // ここでは簡易版として fetch を使用（Apps Script Web Appを別途作成推奨）。
-  // または gapi.client を使用（複雑）。
-
-  console.log('Spreadsheetへ保存:', idea);
-
-  // 例: Google Apps Script Web Appとしてデプロイした場合
-  const WEB_APP_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL'; // ユーザーが作成
-
   const row = [
     new Date().toISOString(),           // A. Timestamp
-    idea.big,                           // B. 大分類
-    idea.title,                         // C. 推奨タイトル
-    idea.summary,                       // D. 200字要約
-    idea.raw,                           // E. 元の投稿文
+    idea.big || '',                     // B. 大分類
+    idea.title || '',                   // C. 推奨タイトル
+    idea.summary || '',                 // D. 200字要約
+    idea.raw || '',                     // E. 元の投稿文
     '',                                 // F. 空
-    idea.mid,                           // G. 中分類
+    idea.mid || '',                     // G. 中分類
     idea.status || 'active',            // H. status
     '',                                 // I. 統合先タイトル
     idea.mergeReason || '',             // J. 統合プロセス経緯
     '',                                 // K. 全体クロス分析結果
     '',                                 // L. 投稿者名
     JSON.stringify({                    // M. AI分析深掘り
-      core: idea.core,
-      change: idea.change,
-      success: idea.success,
-      concern: idea.concern,
-      question: idea.question
+      core: idea.core || '',
+      change: idea.change || '',
+      success: idea.success || '',
+      concern: idea.concern || '',
+      question: idea.question || ''
     }),
     idea.mergeReason || '',             // N. 統合・配置理由
     ''                                  // O. authorId
   ];
 
   try {
-    // 簡易 fetch (Apps Scriptが必要)
-    await fetch(WEB_APP_URL, {
+    const response = await fetch(SPREADSHEET_WEB_APP_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'append', row }),
+      body: JSON.stringify({ action: 'append', row: row }),
       headers: { 'Content-Type': 'application/json' }
     });
-    console.log('スプレッドシートに追加しました');
+    
+    const result = await response.json();
+    if (result.status === 'success') {
+      console.log('✅ スプレッドシートに保存されました');
+    } else {
+      console.warn('保存失敗:', result);
+    }
   } catch (e) {
-    console.warn('スプレッドシート連携失敗（手動確認を）:', e);
+    console.error('スプレッドシート連携エラー:', e);
   }
 }
 
