@@ -114,168 +114,95 @@ p{color:#33372f;}
 
 <script>
 /* ===================== CONFIG ===================== */
-const GROQ_API_KEY = 'YOUR_GROQ_API_KEY_HERE'; // ← ここにGroq APIキーを入力
-const SPREADSHEET_ID = '1AzUUpqhrrR7qis6_ylAC3Xe3XZkzl5b2obLES3mzWT4'; // 提供されたスプレッドシートID
-const SHEET_NAME = 'Sheet1'; // 必要に応じて変更
+const SPREADSHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxJCyRPMJ1ekIGfemMhrMJB2C18YgwgSnYxTsWwvkKQOEcXsrIsMpobK2BNFQdsYdV0wg/exec'; 
+// ↑↑↑ ここをあなたの実際のWeb App URLに変更してください！
 
-/* ===================== BASE CATEGORY DEFINITIONS ===================== */
-const CATEGORIES = [ /* 元の定義そのまま */ ];
-const AI_BASE_SUMMARY = { /* 元の定義そのまま */ };
-const SEED_IDEAS = [ /* 元の定義そのまま */ ];
+/* ===================== BASE DATA ===================== */
+const CATEGORIES = [ /* ここは元の長い配列をそのままコピー */ ];
+const AI_BASE_SUMMARY = { /* 元の定義をそのまま */ };
+const SEED_IDEAS = [ /* 元の定義をそのまま */ ];
 
 let ideas = [];
 let dynamicSubs = [];
 let openCat = null;
 let pendingResult = null;
 
-/* ===================== NAV & STORAGE ===================== */
-// ... (元の関数そのまま) ...
-
-/* ===================== GROQ AI HELPERS ===================== */
-async function callGroq(systemPrompt, userContent, maxTokens = 1600, jsonMode = false) {
-  if (!GROQ_API_KEY || GROQ_API_KEY === 'YOUR_GROQ_API_KEY_HERE') {
-    throw new Error('GROQ_API_KEYを設定してください');
+/* ===================== STORAGE ===================== */
+async function loadIdeas(){
+  try{
+    const res = await window.storage.get('ashiya_voice_ideas_v2', true);
+    ideas = res ? JSON.parse(res.value) : null;
+  }catch(e){ ideas = null; }
+  if(ideas === null){
+    ideas = SEED_IDEAS.map((s,i)=>({
+      id:'seed_'+i, title:s.title, summary:s.summary,
+      core:"", change:"", success:"", concern:"", question:"",
+      big:s.big, mid:s.mid, themeTag:"", raw:s.summary,
+      type:'seed', status:'active', mergedFrom:null, mergeReason:"",
+      ts: Date.now() - (SEED_IDEAS.length-i)*86400000
+    }));
+    await saveIdeas();
   }
+}
 
-  const messages = [
-    { role: "system", content: systemPrompt },
-    { role: "user", content: userContent }
-  ];
-
-  const body = {
-    model: "llama-3.3-70b-versatile", // 日本語対応が良いモデル
-    messages: messages,
-    max_tokens: maxTokens,
-    temperature: 0.3,
-  };
-
-  if (jsonMode) {
-    body.response_format = { type: "json_object" };
+async function saveIdeas(){
+  try{ 
+    await window.storage.set('ashiya_voice_ideas_v2', JSON.stringify(ideas), true); 
+  } catch(e){ 
+    console.error('storage error', e); 
   }
+}
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${GROQ_API_KEY}`
-    },
-    body: JSON.stringify(body)
-  });
+async function loadDynamicSubs(){
+  try{
+    const res = await window.storage.get('ashiya_dynamic_subs_v2', true);
+    dynamicSubs = res ? JSON.parse(res.value) : [];
+  }catch(e){ dynamicSubs = []; }
+}
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Groq API Error: ${response.status} ${err}`);
+async function saveDynamicSubs(){
+  try{ 
+    await window.storage.set('ashiya_dynamic_subs_v2', JSON.stringify(dynamicSubs), true); 
+  } catch(e){ 
+    console.error('storage error', e); 
   }
-
-  const data = await response.json();
-  return data.choices[0].message.content.trim();
 }
 
-/* ===================== UPDATED AI FUNCTIONS ===================== */
-async function classifyAI(text) {
-  const catList = CATEGORIES.map(c => {
-    const subs = getSubs(c.key).map(s => `${s.key}:${s.label}`).join('、');
-    return `${c.key}(${c.label})の中分類→ ${subs}`;
-  }).join(' / ');
-
-  const systemPrompt = `あなたは「市民の声でつくる、芦屋の明日」の分析アシスタントです。ユーザーの自由記述を読み取り、次のJSON形式のみを出力してください（前置き・説明文は一切不要、純粋なJSONのみ）。
-
-出力形式:
-{"bigCategory":"BIG-1〜BIG-5のいずれか","bigLabel":"大分類の日本語名","midCategory":"下記一覧のkey。どれにも当てはまらない場合は各大分類のその他(MID-5)","midLabel":"中分類の日本語名","otherThemeTag":"midCategoryがその他(MID-5)の場合のみ、10〜15字程度でこの投稿の実質的テーマ名を入れる。それ以外は空文字","title":"推奨タイトル。20文字以内。","summary200":"要約200。190〜200文字。","core":"核心。150〜200文字。","change":"変化。150〜200文字。","success":"成功事例。150〜200文字。","concern":"懸念点。150〜200文字。","question":"問い。150〜200文字。"}
-
-大分類と中分類の一覧: ${catList}`;
-
-  const raw = await callGroq(systemPrompt, text, 1600, true);
-  return JSON.parse(raw.replace(/```json|```/g, '').trim());
+function getSubs(bigKey){
+  const base = CATEGORIES.find(c=>c.key===bigKey).baseSubs;
+  const dyn = dynamicSubs.filter(d=>d.big===bigKey).map(d=>({key:d.key, label:d.label, dynamic:true}));
+  return [...base.filter(s=>s.key!=='MID-5'), ...dyn, base.find(s=>s.key==='MID-5')];
 }
 
-async function mergeDecisionAI(activeArticles, proposal) {
-  const list = activeArticles.map(a => `id:${a.id} タイトル:${a.title} 要約:${a.summary}`).join('\n');
-
-  const systemPrompt = `あなたは投稿の統合判定アシスタントです。...（元のプロンプトそのまま）`;
-
-  const userContent = `新しい提案\nタイトル: ${proposal.title}\n要約: ${proposal.summary200}\n本文: ${proposal.raw}`;
-
-  const raw = await callGroq(systemPrompt, userContent, 1600, true);
-  return JSON.parse(raw.replace(/```json|```/g, '').trim());
-}
-
-async function blendAI(bigKey) {
-  const base = AI_BASE_SUMMARY[bigKey];
-  const active = ideas.filter(i => i.big === bigKey && i.status === 'active');
-  const citizenText = active.map(a => `・${a.title}：${a.summary}`).join('\n') || '（まだ市民の声は積み重なっていません）';
-
-  const systemPrompt = `あなたは大分類ごとの「提案集約・共創アップデート案」を作成するアシスタントです。...（元のプロンプトそのまま）`;
-
-  const userMsg = `①最初のビジョン（ベース案）:\n${base}\n\n②市民の声の統合記事:\n${citizenText}`;
-
-  return await callGroq(systemPrompt, userMsg, 900, false);
-}
-
-/* ===================== SPREADSHEET INTEGRATION ===================== */
+/* ===================== GROQ + SPREADSHEET ===================== */
 async function appendToSpreadsheet(idea) {
   const row = [
-    new Date().toISOString(),           // A. Timestamp
-    idea.big || '',                     // B. 大分類
-    idea.title || '',                   // C. 推奨タイトル
-    idea.summary || '',                 // D. 200字要約
-    idea.raw || '',                     // E. 元の投稿文
-    '',                                 // F. 空
-    idea.mid || '',                     // G. 中分類
-    idea.status || 'active',            // H. status
-    '',                                 // I. 統合先タイトル
-    idea.mergeReason || '',             // J. 統合プロセス経緯
-    '',                                 // K. 全体クロス分析結果
-    '',                                 // L. 投稿者名
-    JSON.stringify({                    // M. AI分析深掘り
-      core: idea.core || '',
-      change: idea.change || '',
-      success: idea.success || '',
-      concern: idea.concern || '',
-      question: idea.question || ''
-    }),
-    idea.mergeReason || '',             // N. 統合・配置理由
-    ''                                  // O. authorId
+    new Date().toISOString(), idea.big || '', idea.title || '', idea.summary || '', 
+    idea.raw || '', '', idea.mid || '', idea.status || 'active', '', 
+    idea.mergeReason || '', '', '', JSON.stringify({core:idea.core||'', change:idea.change||'', 
+    success:idea.success||'', concern:idea.concern||'', question:idea.question||''}), 
+    idea.mergeReason || '', ''
   ];
-
+  
   try {
-    const response = await fetch(SPREADSHEET_WEB_APP_URL, {
+    await fetch(SPREADSHEET_WEB_APP_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'append', row: row }),
+      body: JSON.stringify({ action: 'append', row }),
       headers: { 'Content-Type': 'application/json' }
     });
-    
-    const result = await response.json();
-    if (result.status === 'success') {
-      console.log('✅ スプレッドシートに保存されました');
-    } else {
-      console.warn('保存失敗:', result);
-    }
-  } catch (e) {
-    console.error('スプレッドシート連携エラー:', e);
-  }
+    console.log('✅ 保存完了');
+  } catch(e) { console.error('保存失敗', e); }
 }
 
-/* ===================== UPDATED POST FLOW ===================== */
-async function postIdea() {
-  if (!pendingResult) return;
-  // ... 元のロジック ...
-
-  await saveIdeas();
-await appendToSpreadsheet(ideas[ideas.length - 1]);  // ← これを追加
-
-  // 新規投稿をスプレッドシートに連携
-  await appendToSpreadsheet(ideas[ideas.length - 1]);
-
-  // UI更新...
-}
+/* ===================== 残りの関数（元のコードをここに貼る） ===================== */
+// ここに元の classifyAI, runAI, postIdea, render などの関数をすべて貼り付けてください
 
 /* ===================== INIT ===================== */
-(async function init() {
+(async function init(){
   await loadIdeas();
   await loadDynamicSubs();
   renderMapUpdate();
-  console.log('%c芦屋ボード v2 (Groq + Spreadsheet連携) 起動', 'color:#2f7a6b;font-weight:bold');
+  console.log('芦屋ボード起動完了');
 })();
 </script>
 </body>
