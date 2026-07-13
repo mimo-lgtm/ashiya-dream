@@ -262,6 +262,7 @@ async function postIdea() {
   // ... 元のロジック ...
 
   await saveIdeas();
+await appendToSpreadsheet(ideas[ideas.length - 1]);  // ← これを追加
 
   // 新規投稿をスプレッドシートに連携
   await appendToSpreadsheet(ideas[ideas.length - 1]);
