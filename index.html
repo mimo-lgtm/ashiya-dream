@@ -6,42 +6,25 @@
 <title>芦屋未来会議</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+/* ここから下を、元のCSSの代わりに貼り付けてください */
 <style>
   :root {
-  --primary: #6c8e7e; 
-  --accent: #e5b08c;
-  --bg: #fdfcf7;
-  --text: #4a4a4a;
-  --soft-shadow: 0 8px 20px rgba(0,0,0,0.06);
-}
-* { box-sizing: border-box; }
-body {
-  font-family: "Zen Kaku Gothic New", sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-  line-height: 1.8;
-  margin: 0;
-}
-h1, h2, .brand { font-family: "Klee One", cursive; color: var(--primary); }
-
-/* 既存のレイアウトを維持しつつ調整 */
-.topbar {
-  background: rgba(255,255,255,0.95);
-  padding: 15px 30px;
-  border-bottom: 2px solid var(--primary);
-  display: flex; justify-content: space-between; align-items: center;
-  position: sticky; top: 0; z-index: 1000;
-}
-.card {
-  background: white; border-radius: 25px; padding: 25px;
-  margin-bottom: 20px; box-shadow: var(--soft-shadow);
-  border: 1px solid #eee;
-}
-button {
-  background: var(--primary); color: white; border: none;
-  padding: 10px 20px; border-radius: 50px; cursor: pointer;
-}
-  </style>
+    --primary: #6c8e7e; --paper: #fdfcf7; --accent: #e5b08c;
+    --text: #4a4a4a; --line: #e0dcd0;
+  }
+  body { font-family: "Zen Kaku Gothic New", sans-serif; background: var(--paper); color: var(--text); line-height: 1.8; margin: 0; }
+  h1, h2, .brand { font-family: "Klee One", cursive; color: var(--primary); }
+  
+  /* カード化して柔らかいデザインにする */
+  .card, section { background: white; border-radius: 20px; padding: 25px; margin: 20px; border: 1px solid var(--line); box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+  
+  /* ボタンを可愛く */
+  button { border-radius: 20px; padding: 10px 20px; border: none; cursor: pointer; font-weight: bold; background: var(--primary); color: white; transition: 0.3s; }
+  button:hover { opacity: 0.8; }
+  
+  /* ヒーロー画像がある場合はここを調整 */
+  .hero-image { width: 100%; border-radius: 20px; margin-bottom: 20px; }
+</style>
 /* その他、元のコードで必要だったクラスは残すか、同様に角丸・柔らかい色味に変更してください */
 </head>
 <body>
