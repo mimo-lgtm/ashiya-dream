@@ -108,6 +108,11 @@ p{color:#33372f;}
 .hero-sub{position:relative;z-index:1;color:#cfd6c9;margin-top:20px;max-width:600px;font-size:14px;}
  
 .hero-tag{position:relative;z-index:1;display:inline-block;margin-top:16px;color:var(--teal);font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--teal);padding:4px 10px;border-radius:999px;letter-spacing:.05em;}
+.hero-illust{position:relative;z-index:1;display:block;width:100%;max-width:640px;height:auto;margin:0 auto 18px;}
+.beacon-ring{transform-origin:500px 108px;animation:beaconPulse 2.4s ease-out infinite;}
+@keyframes beaconPulse{0%{r:6;opacity:.6;}100%{r:38;opacity:0;}}
+.hero-cta-row{position:relative;z-index:1;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:20px;}
+@media(prefers-reduced-motion: reduce){.beacon-ring{animation:none;}}
  
  
  
@@ -351,6 +356,8 @@ textarea:focus{outline:none;}
  
   .flow3{grid-template-columns:1fr;}
  
+  .hero-cta-row{flex-direction:column;align-items:flex-start;}
+ 
   .cork-grid{grid-template-columns:repeat(3,1fr);}
  
   .map-row{grid-template-columns:1fr;}
@@ -362,11 +369,12 @@ textarea:focus{outline:none;}
 }
  
 @media(max-width:560px){.cork-grid{grid-template-columns:1fr 1fr;}}
-@media(max-width:640px){
+ @media(max-width:640px){
   .persp-grid{grid-template-columns:1fr !important;}
   .persp-box{grid-column:auto !important;padding:10px 12px !important;}
   .persp-box .pv{font-size:13px !important;}
-} 
+}
+ 
 </style>
  
 </head>
@@ -395,32 +403,69 @@ textarea:focus{outline:none;}
  
 <main>
  
- 
- 
 <!-- ================= HOME ================= -->
- 
 <section id="home" class="page active">
  
- 
- 
-  <div class="section-lead"><h2>🗺️ 5つのテーマ｜地図とアップデート</h2><span class="tag">BASE VISION × LIVE UPDATE</span></div>
- 
-  <p style="margin-bottom:14px;font-size:13.5px;color:#5a5f52;">左側は最初から変わらない「未来提案の原点」、右側はボタンを押すとその時点の市民の声を反映した最新のアップデート案がその場に表示されます（もう一度押すと閉じます）。</p>
- 
-  <div id="mapUpdateWrap"></div>
- 
- 
- 
   <div class="hero">
+    <svg class="hero-illust" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="市民の声が信号としてAIコアに集まり、5つのテーマへ広がる未来的なイラスト">
+      <ellipse cx="500" cy="108" rx="70" ry="24" fill="none" stroke="#1fb8b3" stroke-width="1" opacity="0.35" stroke-dasharray="3 5"/>
+      <ellipse cx="500" cy="108" rx="70" ry="24" fill="none" stroke="#1fb8b3" stroke-width="1" opacity="0.25" stroke-dasharray="3 5" transform="rotate(60 500 108)"/>
+ 
+      <g stroke="#1fb8b3" stroke-width="2" fill="none" opacity="0.85">
+        <line x1="150" y1="230" x2="150" y2="175"/>
+        <path d="M132,190 Q150,168 168,190" />
+        <path d="M122,205 Q150,168 178,205" opacity="0.5"/>
+      </g>
+      <circle cx="150" cy="175" r="7" fill="#1fb8b3"/>
+ 
+      <g stroke="#f2b632" stroke-width="2" fill="none" opacity="0.85">
+        <line x1="300" y1="245" x2="300" y2="185"/>
+        <path d="M282,200 Q300,178 318,200" />
+        <path d="M272,215 Q300,178 328,215" opacity="0.5"/>
+      </g>
+      <circle cx="300" cy="185" r="7" fill="#f2b632"/>
+ 
+      <g stroke="#e0503a" stroke-width="2" fill="none" opacity="0.85">
+        <line x1="440" y1="225" x2="440" y2="170"/>
+        <path d="M423,184 Q440,163 457,184" />
+        <path d="M414,198 Q440,163 466,198" opacity="0.5"/>
+      </g>
+      <circle cx="440" cy="170" r="7" fill="#e0503a"/>
+ 
+      <path d="M155,172 Q280,95 468,112" fill="none" stroke="#1fb8b3" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
+      <path d="M303,182 Q390,110 470,110" fill="none" stroke="#f2b632" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
+      <path d="M443,167 Q460,140 478,116" fill="none" stroke="#e0503a" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
+ 
+      <circle cx="500" cy="108" r="6" fill="none" stroke="#1fb8b3" stroke-width="1.5" opacity="0.5" class="beacon-ring"/>
+      <polygon points="500,80 524,94 524,122 500,136 476,122 476,94" fill="#0f1626" stroke="#1fb8b3" stroke-width="2"/>
+      <polygon points="500,92 512,99 512,117 500,124 488,117 488,99" fill="#1fb8b3" opacity="0.85"/>
+      <circle cx="500" cy="108" r="4" fill="#f2b632"/>
+ 
+      <g font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Zen Kaku Gothic New, sans-serif">
+        <line x1="500" y1="90" x2="415" y2="48" stroke="#2f3f5e" stroke-width="1.5"/>
+        <circle cx="415" cy="48" r="17" fill="none" stroke="#1fb8b3" stroke-width="1.5"/><text x="415" y="49" fill="#eef3fb">邸</text>
+        <line x1="500" y1="82" x2="461" y2="26" stroke="#2f3f5e" stroke-width="1.5"/>
+        <circle cx="461" cy="26" r="17" fill="none" stroke="#f2b632" stroke-width="1.5"/><text x="461" y="27" fill="#eef3fb">創</text>
+        <line x1="500" y1="80" x2="524" y2="20" stroke="#2f3f5e" stroke-width="1.5"/>
+        <circle cx="524" cy="20" r="17" fill="none" stroke="#e0503a" stroke-width="1.5"/><text x="524" y="21" fill="#eef3fb">響</text>
+        <line x1="500" y1="82" x2="580" y2="30" stroke="#2f3f5e" stroke-width="1.5"/>
+        <circle cx="580" cy="30" r="17" fill="none" stroke="#7a5fe0" stroke-width="1.5"/><text x="580" y="31" fill="#eef3fb">緑</text>
+        <line x1="500" y1="90" x2="618" y2="55" stroke="#2f3f5e" stroke-width="1.5"/>
+        <circle cx="618" cy="55" r="17" fill="none" stroke="#cfe3f2" stroke-width="1.5"/><text x="618" y="56" fill="#eef3fb">志</text>
+      </g>
+    </svg>
  
     <div class="sticky">市民の声でつくる、<br>芦屋の明日。</div>
- 
     <p class="hero-sub">このプラットフォームは、市民のみなさんが、まちへの想いを持ち寄り、未来の芦屋を一緒に共創して育てていくための場です。感じたこと・気づいたことを自由に書き込むと、AIが内容を読み取り、5つのテーマに整理してボードに掲示します。</p>
- 
-    <div class="hero-tag">支援者の声 → AI整理 → 政策提案ボード</div>
- 
+    <div class="hero-cta-row">
+      <button class="big-btn amber" onclick="showPage('assist')">✍️ さっそく声を届けてみる</button>
+      <div class="hero-tag">支援者の声 → AI整理 → 政策提案ボード</div>
+    </div>
   </div>
  
+  <div class="section-lead"><h2>🗺️ 5つのテーマ｜地図とアップデート</h2><span class="tag">BASE VISION × LIVE UPDATE</span></div>
+  <p style="margin-bottom:14px;font-size:13.5px;color:#5a5f52;">左側は最初から変わらない「未来提案の原点」、右側はボタンを押すとその時点の市民の声を反映した最新のアップデート案がその場に表示されます（もう一度押すと閉じます）。</p>
+  <div id="mapUpdateWrap"></div>
  
  
   <div class="card">
@@ -1143,7 +1188,6 @@ function escapeHtml(str){
   await loadIdeas();
   renderMapUpdate();
 })();
- 
 /* ▼音声入力機能（追加） */
 let micRecognition = null;
 let micActive = false;
@@ -1178,6 +1222,7 @@ function toggleMic(){
   micRecognition.start();
 }
 /* ▲音声入力機能ここまで */ 
+ 
 </script>
 </body>
 </html>
