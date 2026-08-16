@@ -764,11 +764,23 @@ function rowToIdea(r){
 async function fetchSheetIdeas(){
   if(!gasUrl) return [];
   try{
-    const res = await fetch(gasUrl); // GET
+    const res = await fetch(gasUrl + '?action=get&t=' + Date.now(), {mode:'cors'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
-    if(!data.ok || !Array.isArray(data.rows)) return [];
-    return data.rows.map(rowToIdea).filter(Boolean);
-  }catch(e){ console.error('sheet fetch failed', e); return []; }
+    if(!data.ok && !data.rows) {
+      console.warn('GAS returned not ok:', data);
+      return [];
+    }
+    const rows = data.rows || [];
+    return rows.map(rowToIdea).filter(Boolean);
+  }catch(e){ 
+    console.error('sheet fetch failed', e); 
+    // CORSエラーの場合はGASのデプロイ設定を確認するメッセージ
+    if(String(e).includes('Failed to fetch')){
+      console.warn('GASのデプロイ設定が「全員」になっているか確認してください');
+    }
+    return []; 
+  }
 }
  
 // 常に「模擬投稿(seed)」＋「スプレッドシートの最新内容」を組み合わせて再構築する（＝スプレッドシートが実体）
@@ -801,14 +813,16 @@ function ideasForSub(bigKey, sub){
  
 /* ===================== AI CALL (Apps Script経由 → Groq/Llama) ===================== */
 async function callGroq(systemPrompt, userText, wantJson){
-  if(!gasUrl){ throw new Error('連携設定でGoogle Apps ScriptのURLを保存してください（AI分析はこのURL経由で実行されます）。'); }
+  if(!gasUrl){ throw new Error('連携設定でGASのURLを設定してください'); }
   const response = await fetch(gasUrl, {
     method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'}, // Apps Script側でのCORSプリフライト回避
-    body: JSON.stringify({ action:'groqProxy', systemPrompt, userText, wantJson: !!wantJson })
+    mode:'cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'geminiProxy', systemPrompt, userText, wantJson: !!wantJson })
   });
+  if(!response.ok) throw new Error('HTTP '+response.status);
   const data = await response.json();
-  if(!data.ok){ throw new Error(data.error || 'AI呼び出しに失敗しました。'); }
+  if(!data.ok){ throw new Error(data.error || 'AI呼び出し失敗'); }
   return data.content;
 }
 async function sheetPost(payload){
